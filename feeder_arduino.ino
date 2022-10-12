@@ -108,7 +108,7 @@ int valveOpenSignal(int buttonState, int buttonPushDuration, int pressTimeThresh
     if (buttonPushDuration >= pressTimeThresh)
     {
       tone(BUZZ, FREQ, 1000);
-      analogWrite(GatePin, GatePWM);  //Leave the valve open
+      analogWrite(GatePin, 255);  //Leave the valve open
       while (1);
     }
     return buttonPushDuration;
