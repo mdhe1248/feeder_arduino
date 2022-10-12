@@ -1,3 +1,4 @@
+// Originally by Nickolas Belenko at Rockefeller University.
 #include <CapacitiveSensor.h>
  
 #define LEVER_PIN 3   // the pin that the pushbutton is attached to
@@ -36,7 +37,7 @@ unsigned long timeCounter = 0;
 
 // Wash
 int buttonPushDuration = 0;  // To measure the duration of button press
-int pressTimeThresh = 200;      // Open the valve when lever pressed longer than `thresh` 
+int pressTimeThresh = 200;   // Open the valve when lever pressed longer than `thresh` 
 
 CapacitiveSensor   lickSensor = CapacitiveSensor(CAP_SEND,CAP_REC);
 
