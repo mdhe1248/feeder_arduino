@@ -21,25 +21,26 @@ int buttonState = 0;         // current state of the button
 int lastButtonState = 0;     // previous state of the button
 
 // Capacitive sensor
-int bytes = 20;
+int bytes = 30;
 int caplimit = 6000;
 long licks; 
 
 // Feeder and lickometer modulator
 unsigned long initialMillis;
 unsigned long dt; // delta time. `millis() - initialMillis`
-int cycleDuration = 25; // The length of each cycle in `loop` in millisecond: This is also lickometer sampling rate.
+int cycleDuration = 50; // The length of each cycle in `loop` in millisecond: This is also lickometer sampling rate.
 int timeoutDelay = cycleDuration-1; // lickometer time out max in millisecond.
-int valveOpenDelay = 500; // Delayed feeding after button press in millisecond
-int valveOpenDuration = 1000; // in millisecond.
+int valveOpenDelay = 3000; // Delayed feeding after button press in millisecond
+int valveOpenDuration = 2000; // in millisecond.
 int toneDuration = 1000; // in millisecond.
 int toneVol = 30; // volume intensity less than 256. This does not work with `tone()` function; and tone frequency cannot be changed.
 int _toneVol;
 unsigned long timeCounter = 0;
 
 // Wash
+int minWashTime = 1000; // Multipled by cycleDuration
 int buttonPushDuration = 0;  // To measure the duration of button press
-int pressTimeThresh = 200;   // Open the valve when lever pressed longer than `thresh` 
+int pressTimeThresh = 200;   // Open the valve when lever pressed longer than `thresh`  (multipled by cycleDuration)
 
 CapacitiveSensor   lickSensor = CapacitiveSensor(CAP_SEND,CAP_REC);
 
@@ -50,6 +51,7 @@ void setup() {
   pinMode(BUZZ, OUTPUT);
   pinMode(TEST_PIN, INPUT);
 
+  //lickSensor.set_CS_AutocaL_Millis(2000);
   lickSensor.set_CS_AutocaL_Millis(0xFFFFFFFF);
   lickSensor.set_CS_Timeout_Millis(timeoutDelay); // Timeout
   analogWrite(GatePin, GatePWM); // Initially feeder is closed
@@ -96,13 +98,15 @@ void loop() {
   lastButtonState = buttonState;
   ////
   
-  buttonPushDuration = valveOpenSignal(buttonState, buttonPushDuration, pressTimeThresh); // Wash function
+  buttonPushDuration = valveOpenSignal(minWashTime, buttonState, buttonPushDuration, pressTimeThresh); // Wash function
   dt = millis()-initialMillis; //Measure time difference between the beginning and the end.
   while(dt < cycleDuration){
     dt = millis()-initialMillis;
   }
   timeCounter += dt;
   Serial.print(buttonState);
+  Serial.print(",");
+  Serial.print(GatePWM);
   Serial.print(",");
   Serial.println(licks);
 }
@@ -116,7 +120,8 @@ long lickCount (int samples, int maximum)
 }
 
 
-int valveOpenSignal(int buttonState, int buttonPushDuration, int pressTimeThresh){
+int valveOpenSignal(int minWashTime, int buttonState, int buttonPushDuration, int pressTimeThresh){
+  int var = 0;
   if (buttonState == HIGH)
   {
     buttonPushDuration += 1;
@@ -124,10 +129,15 @@ int valveOpenSignal(int buttonState, int buttonPushDuration, int pressTimeThresh
     {
       tone(BUZZ, FREQ, 1000);
       analogWrite(GatePin, 255);  //Leave the valve open
-      while (1);
+      while (var <= minWashTime || buttonState == LOW){
+        var++;
+        buttonState = digitalRead(LEVER_PIN);
+      }
+      buttonPushDuration = 0;
     }
     return buttonPushDuration;
   }
-  else
+  else {
     return buttonPushDuration = 0;
+  }
 }
